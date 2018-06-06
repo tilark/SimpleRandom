@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	 <meta name="viewport" 
+          content="initial-scale=1.0,
+                   maximum-scale=1.0">
+     <title>随机抽取题组号</title>
+      <link href="css/elementui.min.css" rel="stylesheet">
+		 <!-- <script type="text/javascript" src="js/vue.min.js"></script> -->
+		 <script type="text/javascript" src="js/vue.js"></script>
+		 <script type="text/javascript" src="js/elementui.min.js"></script>
+</head>
+<body>
+	<div id="app">
+		<!-- <p>
+			1.输入题组号（最小值和最大值）
+			2.开始选题
+			3.提示选题成功，显示题组号，“开始选题”按钮不可用，显示“下一个”的时候
+			4.点击"下一个"，显示"开始选题"
+		</p> -->
+		<div>
+			<el-col :offset="8" :span='16'>
+				<h1 style="color: blue;">随机抽取题组号</h1>
+			</el-col>
+			<el-col :offset="2">
+				<el-button type="primary" size="mini" @click="addGroup">输入题组号</el-button>
+				<el-button type="primary" size="mini" @click="showGroup">{{showGroupMsg}}题组范围</el-button>	
+				<el-button type="primary" size="mini" @click="setUnvaliableGroup">{{setUnvaliableMsg}}</el-button>							
+			</el-col>
+			<el-col :offset="2" :span='8' v-show="unvaliableGroupSetVisible">
+				<!-- 设备不可选题组的操作 -->			
+				<span type="primary">不可选题组有：{{showUnvaliableGroup()}}</span>
+				<br>
+				<el-input v-model.number='unvaliableGroup' placeholder='输入不可选题组'></el-input>
+				<br>
+				<el-button type="primary" size="mini" @click="addUnvaliableGroup">添加不可选题组</el-button>
+				<el-button type="warning" size="mini" @click="removeUnvaliableGroup">移除不可选题组</el-button>
+			</el-col>
+			<el-col :offset="2" v-show="groupVisible">
+				<span>当前题组号范围为{{form.min}}-{{form.max}};不可选题组有：{{showUnvaliableGroup()}}</span>
+			</el-col>
+			<el-col :offset="1" :span="6">
+				<el-form :model="form" :rules="rules" ref="form" label-width="120px" v-show="formVisible">
+						<el-form-item label="题组号最小值" prop="min">
+							<el-input v-model.number="form.min"></el-input>
+						</el-form-item>
+						<el-form-item label="题组号最大值" prop="max">
+							<el-input v-model.number="form.max"></el-input>
+						</el-form-item>
+						<el-form-item>
+							<el-button type="primary" @click="onSubmit">确定</el-button>
+							<el-button type="warning" @click="onCancel">取消</el-button>
+						</el-form-item>
+					</el-form>
+			</el-col>			
+		</div>
+
+		<el-col :offset="8">
+			<div class="userOperate">
+				<!-- <p>用户操作区</p> -->
+				<div class="operationRange">
+					<el-button type="primary" @click="chooseGroup" v-show='chooseVisible'>开始选题</el-button>
+					<el-button type="success" @click="nextUser" v-show='nextVisible'>下一个</el-button>
+				</div>
+				<!-- 显示选题结果 -->				
+				<div class="resultRange" v-show='resultVisible'>
+					<p>您的题组号是：<br><span class="resultFont">{{result}}</span></p>
+				</div>
+				<!-- 如果没有输入任何可选范围，需提示先输入题组范围 -->
+				<div class="resultRange" v-show='initVisible'>
+					<p><span class="initMessageFont">{{initMessage}}</span></p>
+				</div>
+			</div>
+		</el-col>
+		
+	</div>
+
+	<script>
+		
+		const app = new Vue({
+			el:"#app",
+			data:{
+				form: {
+					min: 0,
+					max: 0,
+				},
+				rules: {
+					min: [
+            { required: true, message: '必须输入', trigger: 'blur' },
+						{ type: 'integer', message: '必须为数字值'},
+          ],
+					max: [
+            { required: true, message: '必须输入', trigger: 'blur' },
+						{ type: 'integer', message: '必须为数字值'},
+          ],
+				},
+				blackList: [],
+				formVisible: false,
+				groupVisible: false,
+				resultVisible: false,
+				nextVisible: false,	
+				unvaliableGroupSetVisible: false,
+				chooseVisible: false,
+				initVisible: true,
+				unvaliableGroup: '',
+				result: '',			
+				showGroupMsg: '显示',
+				setUnvaliableMsg: '设置',
+				initMessage: ''		
+			},
+			computed: {
+				
+			},
+			methods:{
+				addGroup() {
+					this.formVisible = true
+					this.groupVisible = false
+				},
+				showGroup() {					
+					this.groupVisible = this.groupVisible ? false : true
+					this.showGroupMsg = this.groupVisible ? '隐藏' : '显示'					
+				},
+				onCancel() {
+					this.formVisible = false
+				},
+				onSubmit() {
+					this.$refs['form'].validate((valid) => {
+						if (valid) {
+							if(this.form.min <= 0 || this.form.max <= 0 || (this.form.max < this.form.min)){
+							this.$message.error('题组号不能为0，且最大值必须大于等于最小值')					
+							}else {
+								this.$message({
+								message: '输入题组号成功!',
+								type: 'success'
+								});
+								console.log(`题组号范围为${this.form.min}-${this.form.max}`)
+								this.formVisible = false
+								this.groupVisible = true
+								this.showGroupMsg = '隐藏'
+								this.nextVisible = true
+								this.chooseVisible = false
+								this.initVisible = false
+							}
+						} else {
+							console.log('error submit!!');
+							return false;
+						}
+					});									
+				},
+				chooseGroup() {
+					this.result = this.getRandomIntWithRange(this.form.min, this.form.max)
+					//判断该值是否在黑名单中，如果是，则继续获取，直到不在黑名单为止
+					//如果this.blackList与白名单的内容完全一样，会陷入死循环，给100次取值，如果都一样，则跳出
+					let selectNum = 0;
+					while(this.blackList.length > 0 && selectNum <= 100 && this.blackList.find(a => a === this.result) !== undefined){
+						this.result = this.getRandomIntWithRange(this.form.min, this.form.max)
+						selectNum++
+					}
+					if(selectNum > 100){
+						//发生死循环错误
+						this.$message({
+							message: '没有可选题组，请检查题组范围!',
+							type: 'error'
+							});
+						result = '错误'
+					}
+					this.resultVisible = true
+					this.chooseVisible = false
+					this.nextVisible = true
+				},	
+				nextUser () {
+					this.chooseVisible = true
+					this.nextVisible = false
+					this.resultVisible = false
+				},
+				setUnvaliableGroup () {
+					this.unvaliableGroupSetVisible = this.unvaliableGroupSetVisible ? false : true
+					this.setUnvaliableMsg = this.unvaliableGroupSetVisible ? '取消设置' : '设置'
+				},
+				addUnvaliableGroup () {
+					//将unvaliableGroup添加到blackList中
+					if(this.unvaliableGroup > 0){
+						//如果blackList中已经存在，则不添加，并作提示已经存在
+						if(this.blackList.find(a => a === this.unvaliableGroup) === undefined)
+						{
+							this.blackList.push(this.unvaliableGroup)
+							this.$message({
+								message: '添加题组到非选列表中成功!',
+								type: 'success'
+								});
+						}else{
+							this.$message({
+								message: '该题组号已在非选列表中!',
+								type: 'warning'
+								});
+						}
+					}
+					this.unvaliableGroup = ''
+				},
+				removeUnvaliableGroup () {
+					//将unvaliableGroup从blackList中移除
+					if(this.unvaliableGroup > 0){
+						//如果blackList中没有，则提示列表中不存在
+						if(this.blackList.find(a => a === this.unvaliableGroup) === undefined)
+						{
+							this.$message({
+								message: '该题组号不在非选列表中!',
+								type: 'warning'
+								});
+							
+						}else{
+							this.blackList.pop(this.unvaliableGroup)							
+							this.$message({
+								message: '从非选列表中移除成功!',
+								type: 'success'
+								});
+						}						
+					}
+					this.unvaliableGroup = ''
+				},
+				showUnvaliableGroup () {
+					//显示非选题组号
+					let item = ''
+					if(this.blackList !== undefined){
+						this.blackList.forEach(a => {
+							item += a + ','
+						})
+					}
+					return '[' + item.substring(0, item.length - 1) + ']'					
+				},
+				// 包含min与max
+				getRandomIntWithRange(min, max) {
+					let w = max - min
+						let p = Math.random() * w
+						let result = Math.round(p + min)
+						return result
+				}
+			},
+			mounted() {
+				this.formVisible = false
+				this.groupVisible =false
+				this.chooseVisible = false
+				this.nextVisible = false
+				this.showGroupMsg = '显示'
+				this.initVisible = true
+				this.initMessage = '请先输入题组范围!'
+			}
+		});
+	</script>
+	<style>
+		.userOperate {
+			margin-left: 10px;
+			/* border: 1px solid blue; */
+			width: 400px;
+			height: 400px;
+			background-color: orange;
+			border-radius: 50%;
+			-moz-border-radius: 50%;
+			-webkit-border-radius: 50%; 
+		}		
+		.resultRange{
+			padding-top: 50px;
+			padding-left: 35px;
+		}
+		.operationRange{
+			padding-top: 50px;
+			padding-left: 150px;
+		}
+		.chooseOperation{
+			margin-top: 20px;
+		}
+		p{
+			font-size: 16px;
+			text-align: center;
+			color: aliceblue;
+		}
+		.resultFont{
+			font-size: 100px;
+			text-align: center;
+			color: aliceblue;
+		}
+		.initMessageFont{
+			font-size: 40px;
+			text-align: center;
+			color: aliceblue;
+		}
+	</style>
+</body>

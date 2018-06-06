@@ -1,0 +1,130 @@
+ .edit{
+    display:block ;
+    width:80%;
+    height: 35px;
+    line-height: 35px;
+    margin: 30px auto;
+    box-sizing: border-box;
+    padding-left: 4px;
+    border-radius: 4px;
+    border:1px solid #ccc;
+    outline: 0;
+    box-shadow: 0 0 5px #ccc;
+ }
+ .list{
+    margin:0 auto;
+    width:80%;
+ }
+ .unit{
+    position: relative;
+    padding: 10px 0;
+    border-bottom: 1px solid #efefef;
+ }
+ .unit:last-child{
+    border-bottom: 0;
+ }
+
+ .finish{
+    text-decoration:line-through;
+    color:#ccc;
+ }
+
+.del{
+    background: red;
+    text-decoration: none;
+    position: absolute;
+    right:0;
+    font-size: 12px;
+    border: 0;
+    outline: 0;
+    padding: 2px 5px;
+    border-radius: 5px;
+    color: #fff;
+ }
+
+ .empty{
+    font-size:13px;
+    color:#ccc;
+    text-align: center;
+    padding: 10px 0;
+ }
+
+ .totalCount{
+    font-size:13px;
+    color:#ccc;
+    text-align: center;
+    padding: 10px 0;
+ }
+.container{
+    width:600px;
+     height:300px;
+    border: 2px solid;
+    margin: 1px;
+}
+ .box{
+     width:600px;
+     height:300px;
+     background: red;
+
+     opacity: 1;
+     margin-left: 0;
+ }
+
+ .box-enter-active,.box-leave-active{
+     transition: all .8s;     
+ }
+
+ .box-enter{
+     opacity: 0;
+     margin-left: 100%;
+ }
+ .box-leave-active{
+     opacity: 0;
+     margin-left: 100%;
+ }
+
+ .box-leave{
+     height: 700px;
+    opacity: 0.5;
+}
+
+#smapleunit{
+    width: 80px;
+    height: auto;
+    border: 1px solid;
+}
+#app{
+    width:600px;
+    height: auto;
+    border:1px solid;
+}
+
+#appcomputed{
+    width:600px;
+    height: auto;
+    border:1px solid;
+   
+}
+#appcomputed .result{
+    width:auto;
+    height: 200px;
+    margin-top: 100px;
+    background: #ccc;
+    text-align: right;
+}
+#appcomputed .enter{
+    width:auto;
+    height: 30px;
+    margin-top:10px;
+    background: #ccc;
+    text-align: right;
+}
+.list div{    
+    margin-left: 0px;
+    width:100px;
+    height: 60px;
+    float: left;
+    display: block;
+    border: 1px solid;
+    text-align: center;    
+}
