@@ -11,6 +11,10 @@
 		 <script type="text/javascript" src="js/elementui.min.js"></script>
 		 <script type="text/javascript" src="js/js-xlsx/xlsx.full.min.js"></script>
 
+		 <script type="text/javascript" src="js/vendor/FileSaver.min.js"></script>
+		 <script type="text/javascript" src="js/vendor/Blob.js"></script>
+		 <script type="text/javascript" src="js/vendor/Export2Excel.js"></script>
+
 </head>
 <body>
 	<div id="app">	
@@ -21,7 +25,12 @@
 				</el-table-column>
 			</el-table>
 		</div>
-		
+	
+		<div>
+			<el-button type="primary" @click="handleDownload">导出Excel</el-button>
+			<!-- <a href="" download="这里是下载的文件名.xlsx" id="hf"></a>
+			<span id='hftest'></span> -->
+		</div>
 	</div>
 	
 	<script>	
@@ -140,14 +149,16 @@
 				},
 				isExcel(file) {
 					return /\.(xlsx|xls|csv)$/.test(file.name)
-				}
+				}				
 			}
 		})
 		const app = new Vue({
 			el:"#app",
 			data:{			
 				tableData: [],
-      	tableHeader: []
+				tableHeader: [],
+				filename: 'Test',
+				autoWidth: true
 			},
 			computed: {
 				
@@ -169,7 +180,32 @@
 				handleSuccess({ results, header }) {
 					this.tableData = results
 					this.tableHeader = header
-				}
+				},
+				handleDownload() {
+					const tHeader = this.tableHeader
+					const filterVal = tHeader
+					const list = this.tableData
+					const data = this.formatJson(filterVal, list)
+					export_json_to_excel({
+						header: tHeader,
+						data,
+						filename: this.filename,
+						autoWidth: this.autoWidth
+					})
+				},
+				formatJson(filterVal, jsonData) {
+				return jsonData.map(v => filterVal.map(j => {
+					return v[j]
+					// if (j === 'timestamp') {
+					// 	return parseTime(v[j])
+					// } else {
+					// 	return v[j]
+					// }
+				}))
+			}
+				// handleDownload() {
+				// 	downloadExl(this.tableData)
+				// }
 			},
 			mounted() {
 				

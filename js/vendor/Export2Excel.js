@@ -1,7 +1,9 @@
 /* eslint-disable */
-require('script-loader!file-saver');
-require('script-loader!@/vendor/Blob');
-import XLSX from 'xlsx'
+// require('script-loader!file-saver');
+// require('script-loader!@/vendor/Blob');
+// import XLSX from 'xlsx'
+// require('FileSaver')
+// require('Blob')
 
 function generateArray(table) {
   var out = [];
@@ -72,7 +74,7 @@ function sheet_from_array_of_arrays(data, opts) {
     }
   };
   for (var R = 0; R != data.length; ++R) {
-    for (var C = 0; C != data[R].length; ++C) {
+    for (var C = 0; data[R].length!==undefined && C != data[R].length; ++C) {
       if (range.s.r > R) range.s.r = R;
       if (range.s.c > C) range.s.c = C;
       if (range.e.r < R) range.e.r = R;
@@ -114,7 +116,7 @@ function s2ab(s) {
   return buf;
 }
 
-export function export_table_to_excel(id) {
+function export_table_to_excel(id) {
   var theTable = document.getElementById(id);
   var oo = generateArray(theTable);
   var ranges = oo[1];
@@ -145,20 +147,18 @@ export function export_table_to_excel(id) {
   }), "test.xlsx")
 }
 
-export function export_json_to_excel({
+function export_json_to_excel({
   header,
   data,
   filename,
-  autoWidth = true
-} = {}) {
+  autoWidth = true}) {  
   /* original data */
   filename = filename || 'excel-list'
-  data = [...data]
-  data.unshift(header);
+  data = [...data] 
+  data.unshift(header); 
   var ws_name = "SheetJS";
   var wb = new Workbook(),
-    ws = sheet_from_array_of_arrays(data);
-
+    ws = sheet_from_array_of_arrays(data); 
   if (autoWidth) {
     /*设置worksheet每列的最大宽度*/
     const colWidth = data.map(row => row.map(val => {
@@ -199,8 +199,16 @@ export function export_json_to_excel({
     bookType: 'xlsx',
     bookSST: false,
     type: 'binary'
-  });
+  }); 
+  // const tmpDown = new Blob([s2ab(wbout)], {
+  //   type: "application/octet-stream"
+  // }) 
+  // saveAs(tmpDown, filename + ".xlsx");
   saveAs(new Blob([s2ab(wbout)], {
     type: "application/octet-stream"
   }), filename + ".xlsx");
+}
+
+function testChangeId(){
+  document.getElementById("hftest").innerText = 'TestData'
 }
