@@ -10,6 +10,7 @@
 		 <script type="text/javascript" src="js/vue.js"></script>
 		 <script type="text/javascript" src="js/elementui.min.js"></script>
 		 <script type="text/javascript" src="js/js-xlsx/xlsx.full.min.js"></script>
+		 <script type="text/javascript" src="js/utils/formatdate.js"></script>
 
 		 <script type="text/javascript" src="js/vendor/FileSaver.min.js"></script>
 		 <script type="text/javascript" src="js/vendor/Blob.js"></script>
@@ -27,9 +28,7 @@
 		</div>
 	
 		<div>
-			<el-button type="primary" @click="handleDownload">导出Excel</el-button>
-			<!-- <a href="" download="这里是下载的文件名.xlsx" id="hf"></a>
-			<span id='hftest'></span> -->
+			<el-button type="primary" @click="handleDownload">导出Excel</el-button>		
 		</div>
 	</div>
 	
@@ -194,18 +193,14 @@
 					})
 				},
 				formatJson(filterVal, jsonData) {
-				return jsonData.map(v => filterVal.map(j => {
-					return v[j]
-					// if (j === 'timestamp') {
-					// 	return parseTime(v[j])
-					// } else {
-					// 	return v[j]
-					// }
-				}))
-			}
-				// handleDownload() {
-				// 	downloadExl(this.tableData)
-				// }
+					return jsonData.map(v => filterVal.map(j => {
+						if (j === 'timestamp') {
+							return parseTime(v[j])
+						} else {
+							return v[j]
+						}
+					}))
+				}			
 			},
 			mounted() {
 				
