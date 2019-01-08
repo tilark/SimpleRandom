@@ -15,21 +15,76 @@
 		 <script type="text/javascript" src="js/vendor/FileSaver.min.js"></script>
 		 <script type="text/javascript" src="js/vendor/Blob.js"></script>
 		 <script type="text/javascript" src="js/vendor/Export2Excel.js"></script>
+		 <script type="text/javascript" src="js/chouti.js"></script>
 
 </head>
 <body>
 	<div id="app">	
 		<div class="app-container">
-			<upload-excel-component :on-success='handleSuccess' :before-upload="beforeUpload"></upload-excel-component>
-			<el-table :data="tableData" border highlight-current-row style="width: 100%;margin-top:20px;">
-				<el-table-column v-for='item of tableHeader' :prop="item" :label="item" :key='item'>
-				</el-table-column>
-			</el-table>
+			<el-tabs v-model="activeName2" type="card">
+						<el-tab-pane label="签到抽题" name="first">
+							<h3>签到抽题</h3>
+							<el-form :inline='true'>
+									<el-form-item label='身份证信息'>
+										<el-input v-model='searchInput' placeholder='身份证信息'></el-input>
+									</el-form-item>
+									<el-form-item>
+										<el-button @click='start()'>登记抽题</el-button>
+									</el-form-item>
+							</el-form>
+							<el-table :data='personList.personList'>
+								<el-table-column prop="idCard"label="身份证信息"></el-table-column>
+								<el-table-column prop="zhunkaoZheng"label="准考证信息"></el-table-column>
+								<el-table-column prop="name"label="姓名"></el-table-column>
+								<el-table-column prop="timu1"label="考场1"></el-table-column>
+								<el-table-column prop="timu2"label="考场2"></el-table-column>
+								<el-table-column prop="timu3"label="考场3"></el-table-column>
+							</el-table>
+							<el-dialog
+								title="提示"
+								:visible.sync="dialogVisible"
+								width="30%"
+								:before-close="handleClose">
+								<span>这是一段信息</span>
+								<span slot="footer" class="dialog-footer">
+									<el-button @click="dialogVisible = false">取 消</el-button>
+									<el-button type="primary" @click="registerNewPerson">确 定</el-button>
+								</span>
+							</el-dialog>
+						</el-tab-pane>
+						<el-tab-pane label="查找数据" name="second">
+							<h3>查找数据</h3>
+							<el-form :inline='true'>
+									<el-form-item label='准考证信息'>
+										<el-input v-model='searchInput' placeholder='准考证信息'></el-input>
+									</el-form-item>
+									<el-form-item>
+										<el-button @click='search()'>查询</el-button>
+									</el-form-item>
+							</el-form>
+							<el-table :data='personListFilter'></el-table>
+						</el-tab-pane>
+						<el-tab-pane label="配置" name="third">
+							<h3>配置</h3>
+							<h4>设置题组号</h4>
+							<h4>导出人员信息</h4>
+							<div>
+									<el-button type="primary" @click="handleDownload">导出抽题信息至Excel</el-button>		
+							</div>
+							<h4>上传人员信息</h4>
+							<upload-excel-component :on-success='handleSuccess' :before-upload="beforeUpload"></upload-excel-component>
+							<el-table :data="tableData" border highlight-current-row style="width: 100%;margin-top:20px;">
+								<el-table-column v-for='item of tableHeader' :prop="item" :label="item" :key='item'>
+								</el-table-column>
+							</el-table>
+							
+						</el-tab-pane>
+						
+			</el-tabs>
+			
 		</div>
 	
-		<div>
-			<el-button type="primary" @click="handleDownload">导出Excel</el-button>		
-		</div>
+		
 	</div>
 	
 	<script>	
@@ -157,12 +212,159 @@
 				tableData: [],
 				tableHeader: [],
 				filename: 'Test',
-				autoWidth: true
+				autoWidth: true,
+				searchInput: '',
+				icCard: '',
+				personList: [],
+				personListFilter: [],									
+				showGroupMsg: '显示',
+				zhunKaoZheng: '',
+				personRegister: {
+					idCard: '',
+					zhunkaoZheng: '',
+					name: ''
+				},
+				personRegisterRule: [],
+				activeName2: 'first',
+				dialogVisible: false
 			},
 			computed: {
 				
 			},
 			methods:{
+				start() {
+					console.log(this.personList)
+					const idCard = this.readInfo(this.searchInput)
+					if (idCard === null) {
+						this.$message({
+							type: 'error',
+							message: '输入内容为空，请重新输入!'
+						});
+						return false
+					}
+					const person = this.personList.getPersonByIdCard(idCard)
+					if (person !== null) {
+						// 查到信息
+						if(person.hasSigned()) {
+							// 已经登记抽题
+							this.canSignAgain().then(() => {
+								this.sign(person)
+							}).catch(() =>{
+								this.$message({
+									type: 'success',
+									message: '已经取消再次抽题!'
+								});
+							})							
+						} else {
+							// 没有登记抽题
+							// 登记抽题
+							this.sign(person)
+						}
+					} else {
+						// 没有人员信息，提示是否新登记
+						this.canSign().then(() => {
+							// const newPerson =	this.registerInfo()
+							this.registerInfo()
+						    // if(this.personList.addPerson(newPerson)) {
+							// 	this.sign(newPerson)
+							// } else {
+							// 	this.$message({
+							// 		type: 'error',
+							// 		message: '该人员已经登记在列表中!'
+							// 	});
+							// }
+						}).catch(() =>{
+							this.$message({
+									type: 'success',
+									message: '已经取消登记新人员!'
+								});
+						})						
+					}
+				},				
+				readInfo(searchInput) {
+					// 读取输入框内容，斛析出身份证信息 、、如果是空值，则提示为空，不进行接下来操作
+					if (searchInput ==='' || searchInput === null || searchInput === null) {
+						return null
+					}
+					return searchInput
+				},
+				canSign() {
+					return new Promise((resolve, reject) => {
+						this.$confirm('未找到该人员信息，允许签到抽题, 是否继续?', '提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+							}).then(() => {
+								resolve(true)								
+							}).catch(() => {
+								reject(false)								        
+							});
+					})
+				},
+				canSignAgain() {
+					return new Promise((resolve, reject) => {
+						this.$confirm('该人员已经签到抽题, 是否重新签到抽题?', '提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+							}).then(() => {
+								resolve(true)								
+							}).catch(() => {
+								reject(false)								         
+							});
+					})
+				},
+				registerInfo() {
+					// 打开一个对话框,要求输入准准考证号等身份信息,确认后再继续抽题
+					// return new Person("1001", 'zhunkao1', 'A')
+					this.dialogVisible = true
+				},
+				registerNewPerson() {
+					this.$message({
+						type:'success',
+						message:'注册新成员成功!'
+					})
+					this.dialogVisible = false
+				},
+				sign(person) {
+					/// 抽题
+					console.log(person)
+				   if(this.personList.setPersonTimu(person, '1','2','3'))	{
+						this.$message({
+							type: 'success',
+							message: '投题成功!'
+						});
+				   } else {
+						this.$message({
+							type: 'error',
+							message: '投题失败!'
+						});
+				   }
+					// person.setTimu('1','2','3')
+					
+				},
+				setPersonList() {
+					// 初始化PersonList，可通过从Excel中导入数据
+					const mockPersonList = [new Person('4001','zk4001','张三'), new Person('5001','zk5001','李四'),new Person('6001','zk6001','王五')]
+					this.personList = new PersonList(mockPersonList)
+					// console.log(this.personList)
+				},
+				setTiKu1() {
+					this.tiku1 = []
+				},
+				setTiKu2() {
+					this.tiku2 = []
+				},
+				setTiKu3() {
+					this.tiku3 = []
+				},
+				handleClose(done) {
+					this.$confirm('确认关闭？')
+					.then(_ => {
+						done();
+					})
+					.catch(_ => {});
+				},
 				beforeUpload(file) {
 					const isLt1M = file.size / 1024 / 1024 < 1
 
@@ -203,7 +405,7 @@
 				}			
 			},
 			mounted() {
-				
+				this.setPersonList()
 			}
 		});
 
