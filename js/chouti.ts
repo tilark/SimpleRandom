@@ -53,8 +53,8 @@ class Person {
     timu1: string;
     timu2: string;
     timu3: string;
-    singed: boolean = false;
-    signedDate: string;
+    signed: boolean = false;
+    signedDate: any;
     constructor(idCard:string, zhunkaoZheng:string, name: string) {
         this.idCard = idCard;
         this.zhunkaoZheng = zhunkaoZheng;
@@ -62,6 +62,8 @@ class Person {
         this.timu1 = '0'
         this.timu2 = '0'
         this.timu3 = '0'
+        this.signed = false
+        // this.signedDate = new Date()
     }
     changePersonInfo(idCard:string, zhunkaoZheng: string, name: string) {
         this.idCard = idCard
@@ -72,10 +74,11 @@ class Person {
         this.timu1 = timu1
         this.timu2 = timu2
         this.timu3 = timu3
-        this.singed = true
+        this.signedDate = new Date()
+        this.signed = true
     }
     hasSigned() {
-        return this.singed
+        return this.signed
     }
 }
 

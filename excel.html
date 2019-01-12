@@ -39,6 +39,9 @@
 								<el-table-column prop="timu1"label="考场1"></el-table-column>
 								<el-table-column prop="timu2"label="考场2"></el-table-column>
 								<el-table-column prop="timu3"label="考场3"></el-table-column>
+								<el-table-column prop="signed"label="是否签到抽题" :formatter="formateSigned"></el-table-column>
+								<el-table-column prop="signedDate"label="抽题时间" :formatter="formateDate"></el-table-column>
+
 							</el-table>
 							<el-dialog
 								title="提示"
@@ -331,7 +334,7 @@
 			},
 			methods:{
 				start() {
-					// console.log(this.personList)
+					console.log(this.personList)
 					const idCard = this.readInfo(this.searchInput)
 					if (idCard === null) {
 						this.$message({
@@ -535,6 +538,12 @@
 							return v[j]
 						}
 					}))
+				},
+				formateDate(row) {
+					return parseTime(row.signedDate)
+				},
+				formateSigned(row) {
+					return row.signed === true ? '是' : '否'
 				}			
 			},
 			mounted() {

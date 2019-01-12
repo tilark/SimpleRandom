@@ -49,13 +49,15 @@ var PersonList = /** @class */ (function () {
 }());
 var Person = /** @class */ (function () {
     function Person(idCard, zhunkaoZheng, name) {
-        this.singed = false;
+        this.signed = false;
         this.idCard = idCard;
         this.zhunkaoZheng = zhunkaoZheng;
         this.name = name;
         this.timu1 = '0';
         this.timu2 = '0';
         this.timu3 = '0';
+        this.signed = false;
+        // this.signedDate = new Date()
     }
     Person.prototype.changePersonInfo = function (idCard, zhunkaoZheng, name) {
         this.idCard = idCard;
@@ -66,10 +68,11 @@ var Person = /** @class */ (function () {
         this.timu1 = timu1;
         this.timu2 = timu2;
         this.timu3 = timu3;
-        this.singed = true;
+        this.signedDate = new Date();
+        this.signed = true;
     };
     Person.prototype.hasSigned = function () {
-        return this.singed;
+        return this.signed;
     };
     return Person;
 }());
