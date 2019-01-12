@@ -67,37 +67,45 @@
 						<el-tab-pane label="配置" name="third">
 							<h3>配置</h3>
 							<h4>设置题组号</h4>
-							<el-form :form='tikuForm'>
-								<el-form-item label="考场题库1">
-									<el-col :span="6">
+							<el-form :inline="true"  :model='tikuForm' :rules="tikuFormRule" ref="tikuForm">
+								<el-form-item label="考场题库1" prop='tiku1Min'>
+									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku1Min"></el-input>
-									</el-col>
-									<el-col class="line" :span="2">至</el-col>
-									<el-col :span="6">
+									</el-col>																									
+								</el-form-item>
+								<el-form-item prop='tiku1Max'>	
+									<el-col class="line" :span="2">至</el-col>									
+									<el-col :span="22">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku1Max"></el-input>
 									</el-col>									
 								</el-form-item>
-								<el-form-item label="考场题库2">
-									<el-col :span="6">
+								<br>
+								<el-form-item label="考场题库2" prop='tiku2Min'>
+									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku2Min" style="width: 100%;"></el-input>
-									</el-col>
-									<el-col class="line" :span="2">-</el-col>
-									<el-col :span="6">
+									</el-col>	
+								</el-form-item>
+								<el-form-item prop='tiku2Max'>									
+									<el-col class="line" :span="2">至</el-col>
+									<el-col :span="22">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku2Max" style="width: 100%;"></el-input>
 									</el-col>									
 								</el-form-item>
-								<el-form-item label="考场题库3">
-									<el-col :span="6">
+								<br>
+								<el-form-item label="考场题库3" prop='tiku3Min'>
+									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku3Min" style="width: 100%;"></el-input>
-									</el-col>
-									<el-col class="line" :span="2">-</el-col>
-									<el-col :span="6">
+									</el-col>																		
+								</el-form-item>
+								<el-form-item prop='tiku3Max'>
+									<el-col class="line" :span="2">至</el-col>									
+									<el-col :span="22">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku3Max" style="width: 100%;"></el-input>
 									</el-col>									
 								</el-form-item>
 								<el-form-item>
 									<el-col :offset='5'>									
-										<el-button type="primary" @click="setTiKu">确定</el-button>
+										<el-button type="primary" @click="setTiKu('tikuForm')">确定</el-button>
 									</el-col>
 								</el-form-item>
 								
@@ -241,9 +249,10 @@
 				}				
 			}
 		})
+		
 		const app = new Vue({
 			el:"#app",
-			data:{			
+			data:{						
 				tableData: [],
 				tableHeader: [],
 				filename: 'Test',
@@ -271,7 +280,25 @@
 					tiku3Max: 32
 				},
 				tikuFormRule: {
-
+					// 各值不能为0
+					tiku1Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku1Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku2Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku2Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku3Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku3Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					]
 				},
 				personQuantity: 0
 			},
@@ -383,9 +410,7 @@
 							type: 'success',
 							message: '签到抽题成功!'
 						});		
-						console.log(this.tiku1)	
-					console.log(this.tiku2)			
-					console.log(this.tiku3)			
+							
 				   } else {
 						this.$message({
 							type: 'error',
@@ -402,14 +427,26 @@
 					this.personQuantity = this.personList.personList.length
 					// console.log(this.personList)
 				},
-				setTiKu() {					
-					this.setTiKu1()
-					this.setTiKu2()
-					this.setTiKu3()		
+				setTiKu(tikuForm) {	
+					this.$refs[tikuForm].validate((valid) => {
+					if (valid) {
+						
+						this.setTiKu1()
+						this.setTiKu2()
+						this.setTiKu3()	
+						this.$message({
+							type: 'success',
+							message: '设置题库成功！！'
+						});	
+					} else {
+						alert('输入的范围不符合要求，请重新输入！！');
+						return false;
+					}
+					});				
+						
 					console.log(this.tiku1)	
 					console.log(this.tiku2)			
-					console.log(this.tiku3)			
-
+					console.log(this.tiku3)	
 				},
 				setTiKu1() {
 					const limitNumber = this.getLimitNumber(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
@@ -474,7 +511,7 @@
 			},
 			mounted() {
 				this.setPersonList()
-				this.setTiKu()
+				this.setTiKu('tikuForm')
 			}
 		});
 
