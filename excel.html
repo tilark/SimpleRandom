@@ -68,44 +68,41 @@
 							<h3>配置</h3>
 							<h4>设置题组号</h4>
 							<el-form :inline="true"  :model='tikuForm' :rules="tikuFormRule" ref="tikuForm">
-								<el-form-item label="考场题库1" prop='tiku1Min'>
+								<el-form-item label="考场题库1最小值" prop='tiku1Min'>
 									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku1Min"></el-input>
 									</el-col>																									
 								</el-form-item>
-								<el-form-item prop='tiku1Max'>	
-									<el-col class="line" :span="2">至</el-col>									
-									<el-col :span="22">
+								<el-form-item prop='tiku1Max' label="最大值">	
+									<el-col :span="24">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku1Max"></el-input>
 									</el-col>									
 								</el-form-item>
 								<br>
-								<el-form-item label="考场题库2" prop='tiku2Min'>
+								<el-form-item label="考场题库2最小值" prop='tiku2Min'>
 									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku2Min" style="width: 100%;"></el-input>
 									</el-col>	
 								</el-form-item>
-								<el-form-item prop='tiku2Max'>									
-									<el-col class="line" :span="2">至</el-col>
-									<el-col :span="22">
+								<el-form-item prop='tiku2Max' label="最大值">									
+									<el-col :span="24">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku2Max" style="width: 100%;"></el-input>
 									</el-col>									
 								</el-form-item>
 								<br>
-								<el-form-item label="考场题库3" prop='tiku3Min'>
+								<el-form-item label="考场题库3最小值" prop='tiku3Min'>
 									<el-col :span="24">
 										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku3Min" style="width: 100%;"></el-input>
 									</el-col>																		
 								</el-form-item>
-								<el-form-item prop='tiku3Max'>
-									<el-col class="line" :span="2">至</el-col>									
-									<el-col :span="22">
+								<el-form-item prop='tiku3Max' label="最大值">
+									<el-col :span="24">
 										<el-input placeholder="最大值" v-model.number="tikuForm.tiku3Max" style="width: 100%;"></el-input>
 									</el-col>									
 								</el-form-item>
 								<el-form-item>
-									<el-col :offset='5'>									
-										<el-button type="primary" @click="setTiKu('tikuForm')">确定</el-button>
+									<el-col :offset='5' :span='19'>									
+										<el-button type="primary" @click="setTiKu('tikuForm')">设置题库</el-button>
 									</el-col>
 								</el-form-item>
 								
