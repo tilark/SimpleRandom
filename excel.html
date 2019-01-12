@@ -381,12 +381,15 @@
 				   if(this.personList.setPersonTimu(person, timu1,timu2,timu3))	{
 						this.$message({
 							type: 'success',
-							message: '投题成功!'
-						});				
+							message: '签到抽题成功!'
+						});		
+						console.log(this.tiku1)	
+					console.log(this.tiku2)			
+					console.log(this.tiku3)			
 				   } else {
 						this.$message({
 							type: 'error',
-							message: '投题失败!'
+							message: '签到抽题失败!'
 						});
 				   }
 					
@@ -402,7 +405,11 @@
 				setTiKu() {					
 					this.setTiKu1()
 					this.setTiKu2()
-					this.setTiKu3()					
+					this.setTiKu3()		
+					console.log(this.tiku1)	
+					console.log(this.tiku2)			
+					console.log(this.tiku3)			
+
 				},
 				setTiKu1() {
 					const limitNumber = this.getLimitNumber(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
@@ -417,7 +424,7 @@
 					this.tiku3 = new TiKu(this.tikuForm.tiku3Min, this.tikuForm.tiku3Max, limitNumber)
 				},
 				getLimitNumber(min, max, personQuantity) {
-					return Math.ceil(personQuantity !== 0 ? personQuantity / (max - min + 1) : 0) 
+					return Math.round(personQuantity !== 0 ? personQuantity / (max - min + 1) : 0) 
 				},
 				handleClose(done) {
 					this.$confirm('确认关闭？')
