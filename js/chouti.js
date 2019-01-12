@@ -32,14 +32,10 @@ var PersonList = /** @class */ (function () {
             return false;
         }
         else {
-            // this.personList[index].idCard = person.idCard
-            // this.personList[index].name = person.name
-            // this.personList[index].zhunkaoZheng = person.zhunkaoZheng
             this.personList[index].changePersonInfo(person.idCard, person.zhunkaoZheng, person.name);
         }
     };
     PersonList.prototype.setPersonTimu = function (person, timu1, timu2, timu3) {
-        console.log(this.personList);
         var index = this.personList.findIndex(function (a) { return a.idCard === person.idCard; });
         if (index === -1) {
             return false;
@@ -82,28 +78,36 @@ var TiKu = /** @class */ (function () {
         this.minNumber = min;
         this.maxNumber = max;
         this.limitNumber = limitNumber;
+        this.blackList = [0];
+        this.numberCount = [new NumberCount(0)];
     }
     TiKu.prototype.GetTiMu = function () {
         // 通过算法获得题目
         // 保证抽取的题目能够合理分布，比如题组是1-50，有100个人抽，则出现2号题组号的人为2个。
         // 限制的数量为 100/50=2次 (向上取整，如果是101，则为3次)
         // 当限制数达到上限时，加入到黑名单，不能再出现该题
-        var result = this.getRandomIntWithRange(this.minNumber, this.maxNumber);
+        // 先抽取一个题，看是否在黑名单 中，如果没在，则为有效，将该值的引用加1，如果该值的引用数超过限制数，则加入到黑名单 。如果在黑名单中，继续抽题
+        //    let result = this.getRandomIntWithRange(this.minNumber, this.maxNumber)
+        var result = 0;
         var selectNum = 0;
-        while (this.blackList.length > 0 && selectNum <= 1000 && this.blackList.find(function (a) { return a === result; }) !== undefined) {
+        while (this.blackList.length > 0 && selectNum <= 1000 && this.hasInBlackList(result)) {
             result = this.getRandomIntWithRange(this.minNumber, this.maxNumber);
             selectNum++;
             if (selectNum > 1000) {
                 // 说明所有的题库池已经用完
                 this.limitNumber++;
                 // 清空blackList
-                this.blackList.length = 0;
+                this.blackList = [0];
             }
             else {
                 // 添加到numberCount
                 this.addNumberCount(result);
             }
         }
+        return result;
+    };
+    TiKu.prototype.hasInBlackList = function (num) {
+        var result = this.blackList.findIndex(function (a) { return a === num; }) > -1;
         return result;
     };
     TiKu.prototype.getRandomIntWithRange = function (min, max) {
@@ -118,10 +122,14 @@ var TiKu = /** @class */ (function () {
             this.numberCount.push(new NumberCount(num));
         }
         else {
-            this.numberCount[index].AddCount();
             // 如果count大于等于limitNumber，则添加到blackList
             if (this.numberCount[index].count >= this.limitNumber) {
-                this.blackList.push(this.numberCount[index].num);
+                if (!this.hasInBlackList(this.numberCount[index].num)) {
+                    this.blackList.push(this.numberCount[index].num);
+                }
+            }
+            else {
+                this.numberCount[index].AddCount();
             }
         }
     };
