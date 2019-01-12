@@ -32,15 +32,16 @@
 										<el-button @click='start()'>登记抽题</el-button>
 									</el-form-item>
 							</el-form>
-							<el-table :data='personList.personList'>
+							<el-table :data='personList.personList' :default-sort = "{prop: 'zhunkaoZheng'}">
+									<el-table-column type="index"></el-table-column>
 								<el-table-column prop="idCard"label="身份证信息"></el-table-column>
-								<el-table-column prop="zhunkaoZheng"label="准考证信息"></el-table-column>
+								<el-table-column prop="zhunkaoZheng"label="准考证信息" sortable></el-table-column>
 								<el-table-column prop="name"label="姓名"></el-table-column>
 								<el-table-column prop="timu1"label="考场1"></el-table-column>
 								<el-table-column prop="timu2"label="考场2"></el-table-column>
 								<el-table-column prop="timu3"label="考场3"></el-table-column>
-								<el-table-column prop="signed"label="是否签到抽题" :formatter="formateSigned"></el-table-column>
-								<el-table-column prop="signedDate"label="抽题时间" :formatter="formateDate"></el-table-column>
+								<el-table-column prop="signed"label="是否签到抽题" sortable :formatter="formateSigned"></el-table-column>
+								<el-table-column prop="signedDate"label="抽题时间" sortable :formatter="formateDate"></el-table-column>
 
 							</el-table>
 							<el-dialog
