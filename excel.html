@@ -45,10 +45,21 @@
 								:visible.sync="dialogVisible"
 								width="30%"
 								:before-close="handleClose">
-								<span>这是一段信息</span>
+								<el-form :model="currentPerson" :rules="currentPersonRule" ref="currentPerson" label-width="80px">
+									<el-form-item label="身份证" prop="idCard">
+										<el-input v-model="currentPerson.idCard"></el-input>
+									</el-form-item>
+									<el-form-item label="准考证号" prop="zhunKaoZheng">
+										<el-input v-model="currentPerson.zhunKaoZheng"></el-input>
+									</el-form-item>
+									<el-form-item label="姓名" prop="name">
+											<el-input v-model="currentPerson.name"></el-input>
+									</el-form-item>									
+								</el-form>
+								
 								<span slot="footer" class="dialog-footer">
 									<el-button @click="dialogVisible = false">取 消</el-button>
-									<el-button type="primary" @click="registerNewPerson">确 定</el-button>
+									<el-button type="primary" @click="registerNewPerson('currentPerson')">确 定</el-button>
 								</span>
 							</el-dialog>
 						</el-tab-pane>
@@ -268,6 +279,22 @@
 				personRegisterRule: [],
 				activeName2: 'first',
 				dialogVisible: false,
+				currentPerson: {
+					idCard: '',
+					zhunkaoZheng: '',
+					name: ''
+				},
+				currentPersonRule: {
+					idCard: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的身份证信息，长度为18位" }
+					],
+					zhunKaoZheng: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的准备证号" }
+					],
+					name: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的姓名" }
+					]
+				},
 				tikuForm: {				
 					tiku1Min: 10,
 					tiku1Max: 12,
@@ -334,16 +361,7 @@
 					} else {
 						// 没有人员信息，提示是否新登记
 						this.canSign().then(() => {
-							// const newPerson =	this.registerInfo()
-							this.registerInfo()
-						    // if(this.personList.addPerson(newPerson)) {
-							// 	this.sign(newPerson)
-							// } else {
-							// 	this.$message({
-							// 		type: 'error',
-							// 		message: '该人员已经登记在列表中!'
-							// 	});
-							// }
+							this.registerInfo()						    
 						}).catch(() =>{
 							this.$message({
 									type: 'success',
@@ -357,7 +375,13 @@
 					if (searchInput ==='' || searchInput === null || searchInput === null) {
 						return null
 					}
+					// 设置currentPerson，作为注册用户使用
+					this.setCurrentPerson(searchInput)
 					return searchInput
+				},
+				setCurrentPerson(searchInput) {
+					this.currentPerson.idCard = searchInput
+					this.currentPerson.zhunKaoZheng = ''
 				},
 				canSign() {
 					return new Promise((resolve, reject) => {
@@ -390,18 +414,25 @@
 					// return new Person("1001", 'zhunkao1', 'A')
 					this.dialogVisible = true
 				},
-				registerNewPerson() {
-					this.$message({
-						type:'success',
-						message:'注册新成员成功!'
-					})
-					this.dialogVisible = false
+				registerNewPerson(formName) {					
+					this.$refs[formName].validate((valid) => {
+						if (valid) {
+							// 加入到PersonList，并签到抽题
+							const registerPerson = new Person(this.currentPerson.idCard, this.currentPerson.zhunKaoZheng, this.currentPerson.name)
+							this.personList.addPerson(registerPerson)
+							this.sign(registerPerson)	
+							this.dialogVisible = false
+						} else {
+							return false;
+						}
+					});				
+					
 				},
 				sign(person) {
 					/// 抽题
 					const timu1 = this.tiku1.GetTiMu() + ''					
 					const timu2 = this.tiku2.GetTiMu() + ''
-					const timu3 = this.tiku3.GetTiMu()+ ''
+					const timu3 = this.tiku3.GetTiMu() + ''
 				   if(this.personList.setPersonTimu(person, timu1,timu2,timu3))	{
 						this.$message({
 							type: 'success',
