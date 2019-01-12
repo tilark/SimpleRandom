@@ -67,6 +67,41 @@
 						<el-tab-pane label="配置" name="third">
 							<h3>配置</h3>
 							<h4>设置题组号</h4>
+							<el-form :form='tikuForm'>
+								<el-form-item label="考场题库1">
+									<el-col :span="6">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku1Min"></el-input>
+									</el-col>
+									<el-col class="line" :span="2">至</el-col>
+									<el-col :span="6">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku1Max"></el-input>
+									</el-col>									
+								</el-form-item>
+								<el-form-item label="考场题库2">
+									<el-col :span="6">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku2Min" style="width: 100%;"></el-input>
+									</el-col>
+									<el-col class="line" :span="2">-</el-col>
+									<el-col :span="6">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku2Max" style="width: 100%;"></el-input>
+									</el-col>									
+								</el-form-item>
+								<el-form-item label="考场题库3">
+									<el-col :span="6">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku3Min" style="width: 100%;"></el-input>
+									</el-col>
+									<el-col class="line" :span="2">-</el-col>
+									<el-col :span="6">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku3Max" style="width: 100%;"></el-input>
+									</el-col>									
+								</el-form-item>
+								<el-form-item>
+									<el-col :offset='5'>									
+										<el-button type="primary" @click="setTiKu">确定</el-button>
+									</el-col>
+								</el-form-item>
+								
+							</el-form>
 							<h4>导出人员信息</h4>
 							<div>
 									<el-button type="primary" @click="handleDownload">导出抽题信息至Excel</el-button>		
@@ -226,7 +261,19 @@
 				},
 				personRegisterRule: [],
 				activeName2: 'first',
-				dialogVisible: false
+				dialogVisible: false,
+				tikuForm: {				
+					tiku1Min: 0,
+					tiku1Max: 0,
+					tiku2Min: 0,
+					tiku2Max: 0,
+					tiku3Min: 0,
+					tiku3Max: 0
+				},
+				tikuFormRule: {
+
+				},
+				personQuantity: 0
 			},
 			computed: {
 				
@@ -347,16 +394,29 @@
 					// 初始化PersonList，可通过从Excel中导入数据
 					const mockPersonList = [new Person('4001','zk4001','张三'), new Person('5001','zk5001','李四'),new Person('6001','zk6001','王五')]
 					this.personList = new PersonList(mockPersonList)
+					this.personQuantity = this.personList.personList.length
 					// console.log(this.personList)
 				},
+				setTiKu() {					
+					this.setTiKu1()
+					this.setTiKu2()
+					this.setTiKu3()
+					console.log(this.tikuForm)
+				},
 				setTiKu1() {
-					this.tiku1 = []
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
+					this.tiku1 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
 				},
 				setTiKu2() {
-					this.tiku2 = []
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku2Min, this.tikuForm.tiku2Max, this.personQuantity)
+					this.tiku2 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
 				},
 				setTiKu3() {
-					this.tiku3 = []
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku3Min, this.tikuForm.tiku3Max, this.personQuantity)
+					this.tiku3 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
+				},
+				getLimitNumber(min, max, personQuantity) {
+					return this.personQuantity !== 0 ? this.personQuantity / (max - min) : 0
 				},
 				handleClose(done) {
 					this.$confirm('确认关闭？')
