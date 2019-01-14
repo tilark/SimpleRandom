@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	 <meta name="viewport" 
+          content="initial-scale=1.0,
+                   maximum-scale=1.0">
+     <title>随机抽取题组号</title>
+      <link href="css/elementui.min.css" rel="stylesheet">
+		 <!-- <script type="text/javascript" src="js/vue.min.js"></script> -->
+		 <script type="text/javascript" src="js/vue.js"></script>
+		 <script type="text/javascript" src="js/elementui.min.js"></script>
+		 <script type="text/javascript" src="js/js-xlsx/xlsx.full.min.js"></script>
+		 <script type="text/javascript" src="js/utils/formatdate.js"></script>
+
+		 <script type="text/javascript" src="js/vendor/FileSaver.min.js"></script>
+		 <script type="text/javascript" src="js/vendor/Blob.js"></script>
+		 <script type="text/javascript" src="js/vendor/Export2Excel.js"></script>
+		 <script type="text/javascript" src="js/chouti.js"></script>
+
+</head>
+<body>
+	<div id="app">	
+		<div class="app-container">
+			<el-tabs v-model="activeName2" type="card">
+						<el-tab-pane label="签到抽题" name="first">
+							<h3>签到抽题</h3>
+							<el-form :inline='true'>
+									<el-form-item label='身份证信息'>
+										<el-input v-model='searchInput' placeholder='身份证信息'></el-input>
+									</el-form-item>
+									<el-form-item>
+										<el-button @click='start()'>登记抽题</el-button>
+									</el-form-item>
+							</el-form>
+							<el-table :data='personList.personList' :default-sort = "{prop: 'zhunkaoZheng'}">
+									<el-table-column type="index"></el-table-column>
+								<el-table-column prop="idCard"label="身份证信息"></el-table-column>
+								<el-table-column prop="zhunkaoZheng"label="准考证信息" sortable></el-table-column>
+								<el-table-column prop="name"label="姓名"></el-table-column>
+								<el-table-column prop="timu1"label="考场1"></el-table-column>
+								<el-table-column prop="timu2"label="考场2"></el-table-column>
+								<el-table-column prop="timu3"label="考场3"></el-table-column>
+								<el-table-column prop="signed"label="是否签到抽题" sortable :formatter="formateSigned"></el-table-column>
+								<el-table-column prop="signedDate"label="抽题时间" sortable :formatter="formateDate"></el-table-column>
+
+							</el-table>
+							<el-dialog
+								title="提示"
+								:visible.sync="dialogVisible"
+								width="30%"
+								:before-close="handleClose">
+								<el-form :model="currentPerson" :rules="currentPersonRule" ref="currentPerson" label-width="80px">
+									<el-form-item label="身份证" prop="idCard">
+										<el-input v-model="currentPerson.idCard"></el-input>
+									</el-form-item>
+									<el-form-item label="准考证号" prop="zhunKaoZheng">
+										<el-input v-model="currentPerson.zhunKaoZheng"></el-input>
+									</el-form-item>
+									<el-form-item label="姓名" prop="name">
+											<el-input v-model="currentPerson.name"></el-input>
+									</el-form-item>									
+								</el-form>
+								
+								<span slot="footer" class="dialog-footer">
+									<el-button @click="dialogVisible = false">取 消</el-button>
+									<el-button type="primary" @click="registerNewPerson('currentPerson')">确 定</el-button>
+								</span>
+							</el-dialog>
+						</el-tab-pane>
+						<el-tab-pane label="查找数据" name="second">
+							<h3>查找数据</h3>
+							<el-form :inline='true'>
+									<el-form-item label='准考证信息'>
+										<el-input v-model='searchInput' placeholder='准考证信息'></el-input>
+									</el-form-item>
+									<el-form-item>
+										<el-button @click='search()'>查询</el-button>
+									</el-form-item>
+							</el-form>
+							<el-table :data='personListFilter'></el-table>
+						</el-tab-pane>
+						<el-tab-pane label="配置" name="third">
+							<h3>配置</h3>
+							<h4>设置题组号</h4>
+							<el-form :inline="true"  :model='tikuForm' :rules="tikuFormRule" ref="tikuForm">
+								<el-form-item label="考场题库1最小值" prop='tiku1Min'>
+									<el-col :span="24">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku1Min"></el-input>
+									</el-col>																									
+								</el-form-item>
+								<el-form-item prop='tiku1Max' label="最大值">	
+									<el-col :span="24">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku1Max"></el-input>
+									</el-col>									
+								</el-form-item>
+								<br>
+								<el-form-item label="考场题库2最小值" prop='tiku2Min'>
+									<el-col :span="24">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku2Min" style="width: 100%;"></el-input>
+									</el-col>	
+								</el-form-item>
+								<el-form-item prop='tiku2Max' label="最大值">									
+									<el-col :span="24">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku2Max" style="width: 100%;"></el-input>
+									</el-col>									
+								</el-form-item>
+								<br>
+								<el-form-item label="考场题库3最小值" prop='tiku3Min'>
+									<el-col :span="24">
+										<el-input  placeholder="最小值" v-model.number="tikuForm.tiku3Min" style="width: 100%;"></el-input>
+									</el-col>																		
+								</el-form-item>
+								<el-form-item prop='tiku3Max' label="最大值">
+									<el-col :span="24">
+										<el-input placeholder="最大值" v-model.number="tikuForm.tiku3Max" style="width: 100%;"></el-input>
+									</el-col>									
+								</el-form-item>
+								<el-form-item>
+									<el-col :offset='5' :span='19'>									
+										<el-button type="primary" @click="setTiKu('tikuForm')">设置题库</el-button>
+									</el-col>
+								</el-form-item>
+								
+							</el-form>
+							<h4>导出人员信息</h4>
+							<div>
+									<el-button type="primary" @click="handleDownload">导出抽题信息至Excel</el-button>		
+							</div>
+							<h4>上传人员信息</h4>
+							<upload-excel-component :on-success='handleSuccess' :before-upload="beforeUpload"></upload-excel-component>
+							<el-table :data="tableData" border highlight-current-row style="width: 100%;margin-top:20px;">
+								<el-table-column v-for='item of tableHeader' :prop="item" :label="item" :key='item'>
+								</el-table-column>
+							</el-table>
+							
+						</el-tab-pane>
+						
+			</el-tabs>
+			
+		</div>
+	
+		
+	</div>
+	
+	<script>	
+				// 定义名为 UploadExcelComponent 的新组件 实现上传文件的功能
+		Vue.component('UploadExcelComponent', {
+			props: {
+				beforeUpload: Function,
+				onSuccess: Function
+			},
+			data() {		
+				return {
+					loading: false,
+					excelData: {
+						header: null,
+						results: null
+					}			
+				}					
+			},
+			template: '<div>\
+			<input id="excel-upload-input" ref="excel-upload-input" type="file" accept=".xlsx, .xls" @change="handleClick">\
+			<div id="drop" @drop="handleDrop" @dragover="handleDragover" @dragenter="handleDragover">\
+				Drop excel file here or\
+				<el-button :loading="loading" style="margin-left:16px;" size="mini" type="primary" @click="handleUpload">Browse</el-button>\
+			</div>\
+			</div>',
+			methods: {
+				generateDate({ header, results }) {
+					this.excelData.header = header
+					this.excelData.results = results
+					this.onSuccess && this.onSuccess(this.excelData)
+				},
+				handleDrop(e) {
+					e.stopPropagation()
+					e.preventDefault()
+					if (this.loading) return
+					const files = e.dataTransfer.files
+					if (files.length !== 1) {
+						this.$message.error('Only support uploading one file!')
+						return
+					}
+					const rawFile = files[0] // only use files[0]
+
+					if (!this.isExcel(rawFile)) {
+						this.$message.error('Only supports upload .xlsx, .xls, .csv suffix files')
+						return false
+					}
+					this.upload(rawFile)
+					e.stopPropagation()
+					e.preventDefault()
+				},
+				handleDragover(e) {
+					e.stopPropagation()
+					e.preventDefault()
+					e.dataTransfer.dropEffect = 'copy'
+				},
+				handleUpload() {
+					document.getElementById('excel-upload-input').click()
+				},
+				handleClick(e) {
+					const files = e.target.files
+					const rawFile = files[0] // only use files[0]
+					if (!rawFile) return
+					this.upload(rawFile)
+				},
+				upload(rawFile) {
+					this.$refs['excel-upload-input'].value = null // fix can't select the same excel
+
+					if (!this.beforeUpload) {
+						this.readerData(rawFile)
+						return
+					}
+					const before = this.beforeUpload(rawFile)
+					if (before) {
+						this.readerData(rawFile)
+					}
+				},
+				readerData(rawFile) {
+					this.loading = true
+					return new Promise((resolve, reject) => {
+						const reader = new FileReader()
+						reader.onload = e => {
+							const data = e.target.result
+							const fixedData = this.fixdata(data)
+							const workbook = XLSX.read(btoa(fixedData), { type: 'base64' })
+							const firstSheetName = workbook.SheetNames[0]
+							const worksheet = workbook.Sheets[firstSheetName]
+							const header = this.get_header_row(worksheet)
+							const results = XLSX.utils.sheet_to_json(worksheet)
+							this.generateDate({ header, results })
+							this.loading = false
+							resolve()
+						}
+						reader.readAsArrayBuffer(rawFile)
+					})
+				},
+				fixdata(data) {
+					let o = ''
+					let l = 0
+					const w = 10240
+					for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)))
+					o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)))
+					return o
+				},
+				get_header_row(sheet) {
+					const headers = []
+					const range = XLSX.utils.decode_range(sheet['!ref'])
+					let C
+					const R = range.s.r /* start in the first row */
+					for (C = range.s.c; C <= range.e.c; ++C) { /* walk every column in the range */
+						var cell = sheet[XLSX.utils.encode_cell({ c: C, r: R })] /* find the cell in the first row */
+						var hdr = 'UNKNOWN ' + C // <-- replace with your desired default
+						if (cell && cell.t) hdr = XLSX.utils.format_cell(cell)
+						headers.push(hdr)
+					}
+					return headers
+				},
+				isExcel(file) {
+					return /\.(xlsx|xls|csv)$/.test(file.name)
+				}				
+			}
+		})
+		
+		const app = new Vue({
+			el:"#app",
+			data:{						
+				tableData: [],
+				tableHeader: [],
+				filename: 'Test',
+				autoWidth: true,
+				searchInput: '',
+				icCard: '',
+				personList: [],
+				personListFilter: [],									
+				showGroupMsg: '显示',
+				zhunKaoZheng: '',
+				personRegister: {
+					idCard: '',
+					zhunkaoZheng: '',
+					name: ''
+				},
+				personRegisterRule: [],
+				activeName2: 'first',
+				dialogVisible: false,
+				currentPerson: {
+					idCard: '',
+					zhunkaoZheng: '',
+					name: ''
+				},
+				currentPersonRule: {
+					idCard: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的身份证信息，长度为18位" }
+					],
+					zhunKaoZheng: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的准备证号" }
+					],
+					name: [
+						{ required: true,  type:'string', min: 3, max: 18, trigger: 'blur', message: "请输入正确的姓名" }
+					]
+				},
+				tikuForm: {				
+					tiku1Min: 10,
+					tiku1Max: 12,
+					tiku2Min: 20,
+					tiku2Max: 22,
+					tiku3Min: 30,
+					tiku3Max: 32
+				},
+				tikuFormRule: {
+					// 各值不能为0
+					tiku1Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku1Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku2Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku2Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku3Min: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					],
+					tiku3Max: [
+						{required: true,  type:'integer', min: 1, trigger: 'blur', message: "必须为整数且大于0！" }
+					]
+				},
+				personQuantity: 0
+			},
+			computed: {
+				
+			},
+			methods:{
+				start() {
+					console.log(this.personList)
+					const idCard = this.readInfo(this.searchInput)
+					if (idCard === null) {
+						this.$message({
+							type: 'error',
+							message: '输入内容为空，请重新输入!'
+						});
+						return false
+					}
+					const person = this.personList.getPersonByIdCard(idCard)
+					if (person !== null) {
+						// 查到信息
+						if(person.hasSigned()) {
+							// 已经登记抽题
+							this.canSignAgain().then(() => {
+								this.sign(person)
+							}).catch(() =>{
+								this.$message({
+									type: 'success',
+									message: '已经取消再次抽题!'
+								});
+							})							
+						} else {
+							// 没有登记抽题
+							// 登记抽题
+							this.sign(person)
+						}
+					} else {
+						// 没有人员信息，提示是否新登记
+						this.canSign().then(() => {
+							this.registerInfo()						    
+						}).catch(() =>{
+							this.$message({
+									type: 'success',
+									message: '已经取消登记新人员!'
+								});
+						})						
+					}
+				},				
+				readInfo(searchInput) {
+					// 读取输入框内容，斛析出身份证信息 、、如果是空值，则提示为空，不进行接下来操作
+					if (searchInput ==='' || searchInput === null || searchInput === null) {
+						return null
+					}
+					// 设置currentPerson，作为注册用户使用
+					this.setCurrentPerson(searchInput)
+					return searchInput
+				},
+				setCurrentPerson(searchInput) {
+					this.currentPerson.idCard = searchInput
+					this.currentPerson.zhunKaoZheng = ''
+				},
+				canSign() {
+					return new Promise((resolve, reject) => {
+						this.$confirm('未找到该人员信息，允许签到抽题, 是否继续?', '提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+							}).then(() => {
+								resolve(true)								
+							}).catch(() => {
+								reject(false)								        
+							});
+					})
+				},
+				canSignAgain() {
+					return new Promise((resolve, reject) => {
+						this.$confirm('该人员已经签到抽题, 是否重新签到抽题?', '提示', {
+							confirmButtonText: '确定',
+							cancelButtonText: '取消',
+							type: 'warning'
+							}).then(() => {
+								resolve(true)								
+							}).catch(() => {
+								reject(false)								         
+							});
+					})
+				},
+				registerInfo() {
+					// 打开一个对话框,要求输入准准考证号等身份信息,确认后再继续抽题
+					// return new Person("1001", 'zhunkao1', 'A')
+					this.dialogVisible = true
+				},
+				registerNewPerson(formName) {					
+					this.$refs[formName].validate((valid) => {
+						if (valid) {
+							// 加入到PersonList，并签到抽题
+							const registerPerson = new Person(this.currentPerson.idCard, this.currentPerson.zhunKaoZheng, this.currentPerson.name)
+							this.personList.addPerson(registerPerson)
+							this.sign(registerPerson)	
+							this.dialogVisible = false
+						} else {
+							return false;
+						}
+					});				
+					
+				},
+				sign(person) {
+					/// 抽题
+					const timu1 = this.tiku1.GetTiMu() + ''					
+					const timu2 = this.tiku2.GetTiMu() + ''
+					const timu3 = this.tiku3.GetTiMu() + ''
+				   if(this.personList.setPersonTimu(person, timu1,timu2,timu3))	{
+						this.$message({
+							type: 'success',
+							message: '签到抽题成功!'
+						});		
+							
+				   } else {
+						this.$message({
+							type: 'error',
+							message: '签到抽题失败!'
+						});
+				   }
+					
+				},
+				setPersonList() {
+					// 初始化PersonList，可通过从Excel中导入数据
+					const mockPersonList = [new Person('4001','zk4001','张三'), new Person('5001','zk5001','李四'),new Person('6001','zk6001','王五'),
+					new Person('7001','zk7001','张三七'), new Person('8001','zk8001','李四八'),new Person('9001','zk9001','王五九')]
+					this.personList = new PersonList(mockPersonList)
+					this.personQuantity = this.personList.personList.length
+					// console.log(this.personList)
+				},
+				setTiKu(tikuForm) {	
+					this.$refs[tikuForm].validate((valid) => {
+					if (valid) {
+						
+						this.setTiKu1()
+						this.setTiKu2()
+						this.setTiKu3()	
+						this.$message({
+							type: 'success',
+							message: '设置题库成功！！'
+						});	
+					} else {
+						alert('输入的范围不符合要求，请重新输入！！');
+						return false;
+					}
+					});				
+						
+					console.log(this.tiku1)	
+					console.log(this.tiku2)			
+					console.log(this.tiku3)	
+				},
+				setTiKu1() {
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
+					this.tiku1 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, limitNumber)
+				},
+				setTiKu2() {
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku2Min, this.tikuForm.tiku2Max, this.personQuantity)
+					this.tiku2 = new TiKu(this.tikuForm.tiku2Min, this.tikuForm.tiku2Max, limitNumber)
+				},
+				setTiKu3() {
+					const limitNumber = this.getLimitNumber(this.tikuForm.tiku3Min, this.tikuForm.tiku3Max, this.personQuantity)
+					this.tiku3 = new TiKu(this.tikuForm.tiku3Min, this.tikuForm.tiku3Max, limitNumber)
+				},
+				getLimitNumber(min, max, personQuantity) {
+					return Math.round(personQuantity !== 0 ? personQuantity / (max - min + 1) : 0) 
+				},
+				handleClose(done) {
+					this.$confirm('确认关闭？')
+					.then(_ => {
+						done();
+					})
+					.catch(_ => {});
+				},
+				beforeUpload(file) {
+					const isLt1M = file.size / 1024 / 1024 < 1
+
+					if (isLt1M) {
+						return true
+					}
+
+					this.$message({
+						message: 'Please do not upload files larger than 1m in size.',
+						type: 'warning'
+					})
+					return false
+				},
+				handleSuccess({ results, header }) {
+					this.tableData = results
+					this.tableHeader = header
+				},
+				handleDownload() {
+					const tHeader = this.tableHeader
+					const filterVal = tHeader
+					const list = this.tableData
+					const data = this.formatJson(filterVal, list)
+					export_json_to_excel({
+						header: tHeader,
+						data,
+						filename: this.filename,
+						autoWidth: this.autoWidth
+					})
+				},
+				formatJson(filterVal, jsonData) {
+					return jsonData.map(v => filterVal.map(j => {
+						if (j === 'timestamp') {
+							return parseTime(v[j])
+						} else {
+							return v[j]
+						}
+					}))
+				},
+				formateDate(row) {
+					return parseTime(row.signedDate)
+				},
+				formateSigned(row) {
+					return row.signed === true ? '是' : '否'
+				}			
+			},
+			mounted() {
+				this.setPersonList()
+				this.setTiKu('tikuForm')
+			}
+		});
+
+	</script>
+	<style>
+		#excel-upload-input{
+		display: none;
+		z-index: -9999;
+		}
+		#drop{
+			border: 2px dashed #bbb;
+			width: 600px;
+			height: 160px;
+			line-height: 160px;
+			margin: 0 auto;
+			font-size: 24px;
+			border-radius: 5px;
+			text-align: center;
+			color: #bbb;
+			position: relative;
+		}
+	</style>
+</body>
