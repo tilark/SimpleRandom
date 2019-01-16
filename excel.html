@@ -462,7 +462,10 @@
 				setTiKu(tikuForm) {	
 					this.$refs[tikuForm].validate((valid) => {
 					if (valid) {
-						
+						// 存入到localStorage
+						var d=JSON.stringify(this.tikuForm);
+            			window.localStorage.setItem("tikuForm",d);
+
 						this.setTiKu1()
 						this.setTiKu2()
 						this.setTiKu3()	
@@ -482,7 +485,7 @@
 				},
 				setTiKu1() {
 					const limitNumber = this.getLimitNumber(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, this.personQuantity)
-					this.tiku1 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, limitNumber)
+					this.tiku1 = new TiKu(this.tikuForm.tiku1Min, this.tikuForm.tiku1Max, limitNumber)					
 				},
 				setTiKu2() {
 					const limitNumber = this.getLimitNumber(this.tikuForm.tiku2Min, this.tikuForm.tiku2Max, this.personQuantity)
@@ -545,11 +548,33 @@
 				},
 				formateSigned(row) {
 					return row.signed === true ? '是' : '否'
+				},
+				setTikuToLocalSotrage() {
+					// 存入到localStorage
+					var d=JSON.stringify(this.tikuForm);
+            		window.localStorage.setItem("tikuForm",d);
+				},
+				setPersonListToLocalSotrage() {
+					// 存入到localStorage
+					var d=JSON.stringify(this.personList.personList);
+            		window.localStorage.setItem("personList",d);
+				},
+				getLocalStorageData() {
+					// 从localStorage中设置personList、tiku1、tiku2,tiku3,currentPerson到localStorage
+					if (localStorage.personList != undefined && localStorage.tikuForm != undefined ) {
+						const localPersonList = JSON.parse(localStorage.personList)
+						this.personList = new PersonList(localPersonList)
+						this.setTiKu1()
+						this.setTiKu2()
+						this.setTiKu3()	
+					}				
+					
 				}			
 			},
 			mounted() {
 				this.setPersonList()
 				this.setTiKu('tikuForm')
+				this.getLocalStorageData()
 			}
 		});
 
